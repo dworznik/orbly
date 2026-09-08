@@ -9,7 +9,7 @@ A single static page, no build step. Open `index.html` or serve the folder.
 index.html      one scrolling page: hero · how it works · gallery · footer
 404.html        not-found page (served by both GitHub Pages and Cloudflare)
 _headers        Cloudflare caching + security headers
-config.js       deployment config: the Loops newsletter form id
+worker.js       serves /config.js from the environment (no ids in the repo)
 wrangler.jsonc  Cloudflare Workers build config (serves the root as assets)
 assets/         glyph images (g1–g6, ps, pm)
 ```
@@ -23,12 +23,17 @@ else is plain HTML/CSS — IBM Plex Sans, ink-blue ground, orange accent.
 The repo is served from two places. Both publish the repo root as-is, so there
 is nothing to build.
 
-The one value that is not the same everywhere is `config.js`, which carries the
-Loops newsletter form id for the early-access form. It is committed, so whatever
-is on a branch is what that branch's deployment posts to. `main` **is**
-production, so `main` must always carry the production form id — merging the
-`REPLACE_ME` placeholder ships a form that silently fails for every visitor, and
-merging a test id sends real signups to the wrong Loops audience.
+**No id is ever committed.** The early-access form reads its Loops form id from
+`window.ORBLY_CONFIG`, which is served at `/config.js` by `worker.js` from the
+`LOOPS_FORM_ID` environment variable. Set it per environment in the Cloudflare
+dashboard (Settings → Variables). There is deliberately no static `config.js`:
+Workers prefers a matching static asset over the Worker, so committing one would
+shadow the dynamic value and reintroduce a hardcoded id.
+
+This needs a runtime, so it works on Cloudflare and **not** on GitHub Pages,
+where `/config.js` 404s and the form reports a failure instead of submitting.
+That is the current state of `orbly.to` and it is resolved by the migration
+below, not by adding a file.
 
 ### GitHub Pages — production
 

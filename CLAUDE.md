@@ -1,10 +1,29 @@
 # orbly
 
-Static site (`index.html`, `config.js` + `assets/`), no build step. Published from the repo
+Static site (`index.html` + `assets/`), no build step. Published from the repo
 root by two deployments: GitHub Pages (`Lenskiy/orbly` `main` → production,
 `orbly.to`) and Cloudflare Workers Builds (`dworznik/orbly`, configured by
 `wrangler.jsonc`, per-branch version previews). See the Deploy section of
 `README.md`.
+
+## Migrating off GitHub Pages — read this first
+
+**`orbly.to` is moving from GitHub Pages to Cloudflare, imminently.** Treat
+Cloudflare as the target platform for anything you build; do not add work that
+only makes sense on GitHub Pages, and do not "fix" Cloudflare-only files by
+giving them a GitHub Pages equivalent.
+
+This is not cosmetic. Cloudflare has a runtime and GitHub Pages does not, and
+the early-access form already depends on that difference:
+
+- **No secret, key or id is ever committed to this repo.** The Loops form id is
+  served at `/config.js` by `worker.js`, read from the `LOOPS_FORM_ID`
+  environment variable set in the Cloudflare dashboard. If you need another such
+  value, add it the same way — never as a committed file.
+- **On GitHub Pages there is no runtime**, so `/config.js` 404s and the
+  early-access form cannot work on `orbly.to` until the migration completes.
+  That is expected and documented, not a regression to patch around.
+- `_headers` is honoured by Cloudflare and ignored by GitHub Pages.
 
 ## Agent skills
 

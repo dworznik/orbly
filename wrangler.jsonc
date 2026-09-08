@@ -1,0 +1,16 @@
+{
+  // Cloudflare Workers Builds config.
+  //
+  // This site has no build step: the repo root IS the asset directory, and
+  // Workers static assets serve it directly. `_headers` and `404.html` are
+  // honoured here the same way GitHub Pages honours the latter.
+  //
+  // `name` must match the Worker this repo is connected to in the Cloudflare
+  // dashboard, or the build will upload to the wrong place / fail.
+  "name": "orbly",
+  "compatibility_date": "2026-09-08",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "404-page"
+  }
+}

@@ -8,9 +8,8 @@ A single static page, no build step. Open `index.html` or serve the folder.
 ```
 index.html      one scrolling page: hero · how it works · gallery · footer
 404.html        not-found page (served by both GitHub Pages and Cloudflare)
-_headers        Cloudflare caching + security headers
+_headers        Cloudflare Pages caching + security headers
 config.js       deployment config: the Loops newsletter form id
-wrangler.jsonc  Cloudflare Workers build config (serves the root as assets)
 assets/         glyph images (g1–g6, ps, pm)
 ```
 
@@ -39,22 +38,23 @@ serves them as plain files and ignores them.
 
 ### Cloudflare Pages — `*.pages.dev` + branch previews
 
-`dworznik/orbly` is connected as a **Workers Builds** project (not Pages).
-Workers Builds runs a deploy command rather than a build command:
+Connect `dworznik/orbly` in the Cloudflare dashboard: **Workers & Pages →
+Create → Pages → Connect to Git**, then:
 
-| Branch          | Deploy command                 | Result                       |
-| --------------- | ------------------------------ | ---------------------------- |
-| production      | `npx wrangler deploy`          | live on the Worker's URL     |
-| any other branch| `npx wrangler versions upload` | a per-version preview URL    |
+| Setting                | Value    |
+| ---------------------- | -------- |
+| Framework preset       | None     |
+| Build command          | `exit 0` |
+| Build output directory | `/`      |
+| Root directory         | `/`      |
 
-Both read `wrangler.jsonc`, which declares the repo root as the asset
-directory — there is no build, so the assets are simply the checked-out files.
-`_headers` (caching + security headers) and `404.html` are honoured by Workers
-static assets, the latter via `not_found_handling`.
+`exit 0` is Cloudflare's documented no-op for a site with no build step. That
+is the whole setup — `main` deploys to `<project>.pages.dev` and every other
+branch gets its own preview URL. `_headers` (caching + security headers) is
+picked up automatically; it is a Cloudflare-only file.
 
-The `name` in `wrangler.jsonc` must match the Worker configured in the
-Cloudflare dashboard. If the build log says the Worker cannot be found, that
-field is what to fix.
+There is no `wrangler.toml` on purpose: it is the source of truth only for
+Pages Functions and bindings, which this site does not use.
 
 ### Moving `orbly.to` to Cloudflare later
 

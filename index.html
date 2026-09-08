@@ -54,8 +54,10 @@
   .form .hp{position:absolute; width:1px; height:1px; padding:0; margin:-1px; border:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap}
   /* width:100% (not flex-basis) forces its own line in the row layout without
      becoming a height once .form goes flex-direction:column on mobile */
+  /* deliberately NOT display:none when empty: an aria-live region that is
+     hidden at the moment its content changes is unreliably announced, and an
+     empty <p> already occupies no visible box */
   .form-msg{width:100%; flex-shrink:0; margin:0; color:var(--muted); font-size:14px}
-  .form-msg:empty{display:none}
   .glyph-hero{display:flex; justify-content:center; align-items:center}
   #gy{width:100%; max-width:560px; height:auto; aspect-ratio:1/1; filter:drop-shadow(0 0 48px rgba(232,106,46,.14))}
 

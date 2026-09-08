@@ -1,0 +1,17 @@
+{
+  // Cloudflare Workers Builds config for the dworznik/orbly fork.
+  //
+  // Static site, no build step: the repo root IS the asset directory, so there
+  // is no Worker script — just assets. `_headers` and `404.html` are honoured.
+  //
+  // This file is fork-only deploy config. It is NOT part of the site and must
+  // not travel in a PR to Lenskiy/orbly, which is served by GitHub Pages.
+  //
+  // `name` must match the Worker this repo is connected to in the dashboard.
+  "name": "orbly",
+  "compatibility_date": "2026-09-08",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "404-page"
+  }
+}

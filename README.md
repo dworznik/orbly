@@ -9,6 +9,7 @@ A single static page, no build step. Open `index.html` or serve the folder.
 index.html      one scrolling page: hero · how it works · gallery · footer
 404.html        not-found page (served by both GitHub Pages and Cloudflare)
 _headers        Cloudflare Pages caching + security headers
+config.js       deployment config: the Loops newsletter form id
 assets/         glyph images (g1–g6, ps, pm)
 ```
 
@@ -19,7 +20,14 @@ else is plain HTML/CSS — IBM Plex Sans, ink-blue ground, orange accent.
 ## Deploy
 
 The repo is served from two places. Both publish the repo root as-is, so there
-is nothing to build and nothing to keep in sync beyond `main` itself.
+is nothing to build.
+
+The one value that is not the same everywhere is `config.js`, which carries the
+Loops newsletter form id for the early-access form. It is committed, so whatever
+is on a branch is what that branch's deployment posts to. `main` **is**
+production, so `main` must always carry the production form id — merging the
+`REPLACE_ME` placeholder ships a form that silently fails for every visitor, and
+merging a test id sends real signups to the wrong Loops audience.
 
 ### GitHub Pages — production
 

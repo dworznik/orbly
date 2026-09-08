@@ -35,7 +35,7 @@
   .links .here{color:var(--ink)}
 
   /* buttons */
-  .btn{display:inline-block; border:1px solid var(--accent); background:none; color:var(--ink); font:inherit; font-weight:600; cursor:pointer; -webkit-appearance:none; border-radius:12px; padding:14px 24px; text-align:center; white-space:nowrap; transition:border-color .15s}
+  .btn{display:inline-block; border:1px solid var(--accent); background:none; color:var(--ink); font:inherit; font-weight:600; cursor:pointer; -webkit-appearance:none; appearance:none; border-radius:12px; padding:14px 24px; text-align:center; white-space:nowrap; transition:border-color .15s}
   .btn:hover{border-color:var(--accent-hi)}
   .btn:disabled{opacity:.55; cursor:default}
 
@@ -269,8 +269,8 @@
 
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    if(honeypot && honeypot.value) return;   // a bot filled it: silent no-op
     msg.textContent='';                      // never leave a stale status up
+    if(honeypot && honeypot.value) return;   // a bot filled it: silent no-op
 
     if(!FORM_ID || FORM_ID==='REPLACE_ME'){
       console.error('[orbly] no Loops form id — config.js is missing or still set to REPLACE_ME. Submission skipped.');

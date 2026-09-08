@@ -35,8 +35,9 @@
   .links .here{color:var(--ink)}
 
   /* buttons */
-  .btn{display:inline-block; border:1px solid var(--accent); color:var(--ink); border-radius:12px; padding:14px 24px; font-weight:600; white-space:nowrap; transition:border-color .15s}
+  .btn{display:inline-block; border:1px solid var(--accent); background:none; color:var(--ink); font:inherit; font-weight:600; cursor:pointer; -webkit-appearance:none; appearance:none; border-radius:12px; padding:14px 24px; text-align:center; white-space:nowrap; transition:border-color .15s}
   .btn:hover{border-color:var(--accent-hi)}
+  .btn:disabled{opacity:.55; cursor:default}
 
   h1,h2,h3{margin:0; font-weight:600; letter-spacing:-.02em}
   .display{font-size:clamp(44px,6.4vw,72px); line-height:.96; letter-spacing:-.025em}
@@ -46,9 +47,17 @@
   /* hero */
   .hero{display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:40px; padding-top:64px; padding-bottom:88px; min-height:calc(100vh - 72px); min-height:calc(100svh - 72px)}
   .hero p{color:var(--muted); max-width:34em; margin:26px 0 0; font-size:15px}
-  .form{display:flex; gap:10px; margin-top:36px; max-width:470px}
+  .form{display:flex; flex-wrap:wrap; gap:10px; margin-top:36px; max-width:470px}
   .form input{flex:1; min-width:0; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; color:var(--ink); font:inherit; outline:none}
   .form input::placeholder{color:var(--muted)}
+  /* honeypot: off-screen rather than display:none, so bots still fill it */
+  .form .hp{position:absolute; width:1px; height:1px; padding:0; margin:-1px; border:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap}
+  /* width:100% (not flex-basis) forces its own line in the row layout without
+     becoming a height once .form goes flex-direction:column on mobile */
+  /* deliberately NOT display:none when empty: an aria-live region that is
+     hidden at the moment its content changes is unreliably announced, and an
+     empty <p> already occupies no visible box */
+  .form-msg{width:100%; flex-shrink:0; margin:0; color:var(--muted); font-size:14px}
   .glyph-hero{display:flex; justify-content:center; align-items:center}
   #gy{width:100%; max-width:560px; height:auto; aspect-ratio:1/1; filter:drop-shadow(0 0 48px rgba(232,106,46,.14))}
 
@@ -145,9 +154,11 @@
     <div>
       <h1 class="display">Say what&nbsp;<br class="hb">you mean.</h1>
       <p>Any message becomes a circular glyph — a mark you scan to read. Print it on a tee, a wall, a tote, a card. Anyone can see it, and anyone can scan to read it.</p>
-      <form class="form" onsubmit="return false">
-        <input type="email" placeholder="you@email.com" aria-label="Email address">
-        <a href="#" class="btn">Request early access</a>
+      <form class="form" id="early-access">
+        <input type="email" name="email" required autocomplete="email" placeholder="you@email.com" aria-label="Email address">
+        <input type="text" class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button type="submit" class="btn">Request early access</button>
+        <p class="form-msg" aria-live="polite"></p>
       </form>
     </div>
     <div class="glyph-hero">
@@ -242,6 +253,69 @@
   </div>
 </footer>
 
+<script>
+/* early-access form → Loops */
+(function(){
+  /* Put the Loops newsletter form id here. It is the trailing segment of the
+     endpoint Loops shows in the form's publish panel:
+     https://app.loops.so/api/newsletter-form/<id>
+     Safe to commit — a Loops form id is public by design and ships in the page
+     source of every site using one. */
+  var LOOPS_FORM_ID='REPLACE_ME';
+  var LOOPS_ENDPOINT='https://app.loops.so/api/newsletter-form/'+LOOPS_FORM_ID;
+  var OK='Thanks — you’re on the list.';
+  var RATE_LIMITED='Too many tries — give it a minute.';
+  var FAILED='Something went wrong. Try again?';
+
+  var form=document.getElementById('early-access'); if(!form)return;
+  var email=form.querySelector('input[type=email]');
+  var honeypot=form.querySelector('input[name=website]');
+  var btn=form.querySelector('button[type=submit]');
+  var msg=form.querySelector('.form-msg');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    msg.textContent='';                      // never leave a stale status up
+    if(honeypot && honeypot.value) return;   // a bot filled it: silent no-op
+
+    /* Shape check, not a comparison against the placeholder: a global
+       find-and-replace of REPLACE_ME would defeat the latter and silently
+       disable the form. */
+    if(!/^[a-z0-9]{16,}$/i.test(LOOPS_FORM_ID)){
+      console.error('[orbly] LOOPS_FORM_ID is not a valid Loops form id — submission skipped. Set it at the top of this script.');
+      msg.textContent=FAILED; return;
+    }
+
+    btn.disabled=true;
+    fetch(LOOPS_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'email='+encodeURIComponent(email.value)+'&userGroup=early-access&source=orbly.to'
+    }).then(function(r){
+      if(r.status===429){ msg.textContent=RATE_LIMITED; return; }
+      /* Loops answers 200 {"success":true} and 4xx/5xx {"success":false,...},
+         so the status alone is decisive; the body check is belt-and-braces. */
+      return r.json().catch(function(){return null;}).then(function(data){
+        if(r.ok && data && data.success){ email.value=''; msg.textContent=OK; }
+        else { msg.textContent=FAILED; }
+      });
+    }).catch(function(){
+      msg.textContent=FAILED;                // network failure shares the copy
+    }).then(function(){
+      btn.disabled=false;
+    });
+  });
+
+  /* footer CTA keeps its #top anchor jump, then lands the cursor in the field.
+     preventScroll stops focus() yanking the viewport past the headline. */
+  var footerCta=document.querySelector('.foot a.btn[href="#top"]');
+  if(footerCta && email){
+    footerCta.addEventListener('click', function(){
+      setTimeout(function(){ email.focus({preventScroll:true}); }, 0);
+    });
+  }
+})();
+</script>
 <script>
 (function(){
   var cv=document.getElementById('gy'); if(!cv)return;

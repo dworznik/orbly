@@ -19,3 +19,8 @@
 
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# Deployment config: the Loops form id is edited by hand, so it must never be
+# served stale. GitHub Pages ignores this file and applies its own ~10min TTL.
+/config.js
+  Cache-Control: public, max-age=0, must-revalidate
